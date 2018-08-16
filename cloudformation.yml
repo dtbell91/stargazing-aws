@@ -21,6 +21,9 @@ Parameters:
     Description: The domain name for the API Gateway
     AllowedPattern: (?!-)[a-zA-Z0-9-.]{1,63}(?<!-)
     ConstraintDescription: must be a valid DNS name.
+  APIGatewayStage:
+    Type: String
+    Description: The stage we wish to use for API Gateway
 Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
@@ -58,6 +61,7 @@ Resources:
             OriginProtocolPolicy: http-only
         - DomainName: !Ref APIGatewayDomain
           Id: APIGateway
+          OriginPath: !Join ['', [ '/', !Ref 'APIGatewayStage']]
           CustomOriginConfig:
               HTTPPort: '80'
               HTTPSPort: '443'
@@ -67,6 +71,15 @@ Resources:
         DefaultRootObject: index.html
         Aliases:
         - !Ref 'FullDomainName'
+        CacheBehaviors:
+          - PathPattern: /starGaze
+            TargetOriginId: APIGateway
+            ForwardedValues:
+              QueryString: true
+            AllowedMethods: ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+            CachedMethods: ["HEAD", "GET"]
+            Compress: true
+            ViewerProtocolPolicy: https-only
         DefaultCacheBehavior:
           AllowedMethods:
           - GET
